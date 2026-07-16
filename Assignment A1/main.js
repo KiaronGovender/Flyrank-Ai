@@ -43,9 +43,7 @@ app.get("/tasks/:id", (req, res) => {
 
   const task = tasks.find((task) => task.id === id);
 
-  if (!task) {
-    return res.status(404).json({ error: `Task ${id} not found` });
-  }
+  if (!task) return res.status(404).json({ error: `Task ${id} not found` });
 
   return res.status(200).json(task);
 });
@@ -53,9 +51,7 @@ app.get("/tasks/:id", (req, res) => {
 app.post("/tasks", (req, res) => {
   const title = req.body.title;
 
-  if (!title) {
-    return res.status(400).json({ error: "Title missing or empty" });
-  }
+  if (!title) return res.status(400).json({ error: "Title missing or empty" });
 
   const task = {
     id: tasks.length + 1,
@@ -66,6 +62,34 @@ app.post("/tasks", (req, res) => {
   tasks.push(task);
 
   return res.status(201).json(task);
+});
+
+app.put("/tasks/:id", (req, res) => {
+  if (!req.body)
+    return res.status(400).json({ error: "empty or invalid body" });
+
+  const id = Number(req.params.id);
+
+  let task = tasks.find((task) => task.id === id);
+
+  if (!task) return res.status(404).json({ error: "task not found" });
+
+  task = {
+    ...task,
+    ...req.body,
+  };
+  return res.status(200).json(task);
+});
+
+app.delete("/tasks/:id", (req, res) => {
+  const id = Number(req.params.id);
+  const task = tasks.find((task) => task.id === id);
+
+  if (!task) return res.status(404).json({ error: "Unknown id" });
+
+  tasks = tasks.filter((task) => task.id !== id);
+
+  return res.status(204).send();
 });
 
 app.listen(PORT, () => {
