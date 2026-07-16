@@ -1,6 +1,7 @@
 const express = require("express");
 
 const app = express();
+app.use(express.json());
 const PORT = 3000;
 
 let tasks = [
@@ -47,6 +48,24 @@ app.get("/tasks/:id", (req, res) => {
   }
 
   return res.status(200).json(task);
+});
+
+app.post("/tasks", (req, res) => {
+  const title = req.body.title;
+
+  if (!title) {
+    return res.status(400).json({ error: "Title missing or empty" });
+  }
+
+  const task = {
+    id: tasks.length + 1,
+    title: title,
+    done: false,
+  };
+
+  tasks.push(task);
+
+  return res.status(201).json(task);
 });
 
 app.listen(PORT, () => {
