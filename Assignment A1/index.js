@@ -111,5 +111,5 @@ app.delete("/tasks/:id", (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Listening on http://localhost:${PORT}`);
-  console.log(`Swagger Docs: http://localhost:${PORT}/api-docs`);
+  console.log(`Swagger Docs: http://localhost:${PORT}/docs`);
 });
