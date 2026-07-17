@@ -43,6 +43,17 @@
         }
       }
     },
+    "/stats": {
+      "get": {
+        "tags": ["General"],
+        "summary": "Task Statistics",
+        "responses": {
+          "200": {
+            "description": "Lists statistics about the data stored"
+          }
+        }
+      }
+    },
     "/tasks": {
       "get": {
         "tags": ["Tasks"],

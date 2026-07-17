@@ -24,7 +24,7 @@ let tasks = [
   {
     id: 3,
     title: "Read: List and single task",
-    done: true,
+    done: false,
   },
 ];
 
@@ -41,6 +41,15 @@ app.get("/health", (req, res) => {
 });
 
 app.get("/tasks", (req, res) => {
+  const { done } = req.query;
+
+  if (done !== undefined) {
+    const filteredTasks = tasks.filter(
+      (task) => task.done === (done === "true"),
+    );
+
+    return res.json(filteredTasks);
+  }
   return res.json(tasks);
 });
 
@@ -107,6 +116,16 @@ app.delete("/tasks/:id", (req, res) => {
   tasks = tasks.filter((task) => task.id !== id);
 
   return res.status(204).send();
+});
+
+app.get("/stats", (req, res) => {
+  const total = tasks.length;
+
+  let doneCount = tasks.filter((task) => task.done).length;
+
+  return res
+    .status(200)
+    .json({ total: total, done: doneCount, open: total - doneCount });
 });
 
 app.listen(PORT, () => {
