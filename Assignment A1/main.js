@@ -1,8 +1,14 @@
 const express = require("express");
+const swaggerUi = require("swagger-ui-express");
+const openapi = require("./openapi.json");
 
 const app = express();
+
 app.use(express.json());
+
 const PORT = 3000;
+
+app.use("/docs", swaggerUi.serve, swaggerUi.setup(openapi));
 
 let tasks = [
   {
@@ -43,7 +49,9 @@ app.get("/tasks/:id", (req, res) => {
 
   const task = tasks.find((task) => task.id === id);
 
-  if (!task) return res.status(404).json({ error: `Task ${id} not found` });
+  if (!task) {
+    return res.status(404).json({ error: `Task ${id} not found` });
+  }
 
   return res.status(200).json(task);
 });
@@ -51,11 +59,13 @@ app.get("/tasks/:id", (req, res) => {
 app.post("/tasks", (req, res) => {
   const title = req.body.title;
 
-  if (!title) return res.status(400).json({ error: "Title missing or empty" });
+  if (!title) {
+    return res.status(400).json({ error: "Title missing or empty" });
+  }
 
   const task = {
     id: tasks.length + 1,
-    title: title,
+    title,
     done: false,
   };
 
@@ -65,27 +75,34 @@ app.post("/tasks", (req, res) => {
 });
 
 app.put("/tasks/:id", (req, res) => {
-  if (!req.body)
-    return res.status(400).json({ error: "empty or invalid body" });
+  if (!req.body || Object.keys(req.body).length === 0) {
+    return res.status(400).json({ error: "Empty or invalid body" });
+  }
 
   const id = Number(req.params.id);
 
-  let task = tasks.find((task) => task.id === id);
+  const index = tasks.findIndex((task) => task.id === id);
 
-  if (!task) return res.status(404).json({ error: "task not found" });
+  if (index === -1) {
+    return res.status(404).json({ error: "Task not found" });
+  }
 
-  task = {
-    ...task,
+  tasks[index] = {
+    ...tasks[index],
     ...req.body,
   };
-  return res.status(200).json(task);
+
+  return res.status(200).json(tasks[index]);
 });
 
 app.delete("/tasks/:id", (req, res) => {
   const id = Number(req.params.id);
+
   const task = tasks.find((task) => task.id === id);
 
-  if (!task) return res.status(404).json({ error: "Unknown id" });
+  if (!task) {
+    return res.status(404).json({ error: "Unknown id" });
+  }
 
   tasks = tasks.filter((task) => task.id !== id);
 
@@ -93,5 +110,6 @@ app.delete("/tasks/:id", (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Listening on port ${PORT}`);
+  console.log(`Listening on http://localhost:${PORT}`);
+  console.log(`Swagger Docs: http://localhost:${PORT}/api-docs`);
 });
