@@ -69,6 +69,12 @@ No manual database setup is required.
 
 ---
 
+Database Screenshot
+
+![alt text](image-1.png)
+
+---
+
 ## Example SQL Query
 
 The following SQL query was executed during Stage 4:
