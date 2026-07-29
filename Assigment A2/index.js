@@ -53,14 +53,14 @@ app.get("/tasks", (req, res) => {
     return res.json(filteredTasks);
   }
   const tasks = db.prepare("SELECT * FROM tasks").all();
-  console.log(tasks);
+
   return res.json(tasks);
 });
 
 app.get("/tasks/:id", (req, res) => {
   const id = Number(req.params.id);
 
-  const task = db.prepare(`SELECT * FROM tasks WHERE id = ${id}`).all();
+  const task = db.prepare("SELECT * FROM tasks WHERE id = ?").all(id);
 
   if (!task) {
     return res.status(404).json({ error: `Task ${id} not found` });
@@ -93,30 +93,29 @@ app.put("/tasks/:id", (req, res) => {
 
   const id = Number(req.params.id);
 
-  const index = tasks.findIndex((task) => task.id === id);
+  const index = db.prepare("SELECT * FROM tasks WHERE id = ?").get(id);
 
-  if (index === -1) {
+  if (index === 0) {
     return res.status(404).json({ error: "Task not found" });
   }
 
-  tasks[index] = {
-    ...tasks[index],
-    ...req.body,
-  };
+  const updatedTask = db
+    .prepare("UPDATE tasks SET title = ?, done = ? WHERE id = ?")
+    .run(req.body.title, req.body.done, id);
 
-  return res.status(200).json(tasks[index]);
+  return res.status(200).json({});
 });
 
 app.delete("/tasks/:id", (req, res) => {
   const id = Number(req.params.id);
 
-  const task = tasks.find((task) => task.id === id);
+  const task = db.prepare("SELECT * FROM tasks WHERE id = ?").get(id);
 
   if (!task) {
     return res.status(404).json({ error: "Unknown id" });
   }
 
-  tasks = tasks.filter((task) => task.id !== id);
+  const deleteTask = db.prepare("DELETE FROM tasks WHERE id = ?").run(id);
 
   return res.status(204).send();
 });
