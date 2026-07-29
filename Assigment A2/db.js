@@ -18,3 +18,5 @@ insertTask.run("Build a REST API", 1);
 insertTask.run("Practice SQL queries", 0);
 
 console.log("Database seeded successfully!");
+
+module.exports = db;

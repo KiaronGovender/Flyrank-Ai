@@ -1,9 +1,8 @@
 const express = require("express");
 const swaggerUi = require("swagger-ui-express");
 const openapi = require("./openapi.json");
-const Database = require("better-sqlite3");
+const db = require("./db");
 
-const db = new Database("tasks.db");
 const app = express();
 
 app.use(express.json());
@@ -11,24 +10,6 @@ app.use(express.json());
 const PORT = 3000;
 
 app.use("/docs", swaggerUi.serve, swaggerUi.setup(openapi));
-
-let tasks = [
-  {
-    id: 1,
-    title: "Hello, Server!",
-    done: true,
-  },
-  {
-    id: 2,
-    title: "Your first real endpoint!",
-    done: true,
-  },
-  {
-    id: 3,
-    title: "Read: List and single task",
-    done: false,
-  },
-];
 
 app.get("/", (req, res) => {
   return res.json({
