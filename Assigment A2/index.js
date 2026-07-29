@@ -106,6 +106,7 @@ app.put("/tasks/:id", (req, res) => {
   return res.status(200).json({});
 });
 
+// Delete task with ID
 app.delete("/tasks/:id", (req, res) => {
   const id = Number(req.params.id);
 
