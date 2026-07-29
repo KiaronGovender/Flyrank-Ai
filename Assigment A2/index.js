@@ -76,15 +76,14 @@ app.post("/tasks", (req, res) => {
     return res.status(400).json({ error: "Title missing or empty" });
   }
 
-  const task = {
-    id: tasks.length + 1,
-    title,
-    done: false,
-  };
+  const insertTask = db.prepare(`
+    INSERT INTO tasks (title, done)
+    VALUES (?, ?)
+  `);
 
-  tasks.push(task);
+  insertTask.run(title, 0);
 
-  return res.status(201).json(task);
+  return res.status(201).json({ title: title, done: 0 });
 });
 
 app.put("/tasks/:id", (req, res) => {
