@@ -1,109 +1,122 @@
-# Task Management API
+# Task Management REST API (Containerized)
 
-A simple REST API built with **Express.js** and **SQLite** for managing tasks. The application supports creating, reading, updating, and deleting tasks (CRUD) and automatically creates and seeds the database on first run.
-
----
-
-## Why SQLite?
-
-SQLite was chosen for this project because:
-
-- It stores the entire database in a **single file** (`tasks.db`).
-- It requires **zero setup**—no separate database server needs to be installed or configured.
-- The database **persists between application restarts**, so data is not lost when the server stops.
-- It is lightweight, fast, and well suited for small applications and assignments.
+A containerized Node.js & Express REST API for managing tasks, powered by a **PostgreSQL** database and orchestrated with **Docker Compose**.
 
 ---
 
-## Database
+## Quick Start (One Command)
 
-The application uses a SQLite database stored in:
-
-```text
-tasks.db
-```
-
-- The database file is **created automatically** the first time the application starts.
-- The application automatically:
-  - Creates the `tasks` table if it does not exist.
-  - Seeds the database with three sample tasks if the table is empty.
-
-- The database file is included in `.gitignore` so that each new clone of the repository starts with a fresh database that is created automatically.
-
----
-
-## Getting Started
-
-### Install dependencies
+Run the following command in the project root to build and start both the Express API container and the PostgreSQL database container:
 
 ```bash
-pnpm install
+docker compose up
 ```
 
-### Start the application
+*(Or `docker compose up --build` to force a clean rebuild).*
+
+Once started:
+- **API Server**: `http://localhost:3000`
+- **Swagger Documentation**: `http://localhost:3000/docs`
+
+---
+
+## Environment Variables
+
+Copy `.env.example` to `.env` to configure your environment variables:
 
 ```bash
-pnpm start
+cp .env.example .env
 ```
 
-Running this command will automatically:
+| Variable | Description | Default / Example |
+| --- | --- | --- |
+| `DATABASE_URL` | PostgreSQL connection string | `postgres://postgres:dev@localhost:5432/tasks` |
 
-- Create `tasks.db` if it does not already exist.
-- Create the required table.
-- Seed the database with three sample tasks.
-- Start the Express server.
-
-No manual database setup is required.
+*Note: Inside Docker Compose, the database host is automatically routed to `db` (`postgres://postgres:dev@db:5432/tasks`).*
 
 ---
 
 ## API Endpoints
 
-| Method | Endpoint     | Description             |
-| ------ | ------------ | ----------------------- |
-| GET    | `/tasks`     | Retrieve all tasks      |
-| GET    | `/tasks/:id` | Retrieve a task by ID   |
-| POST   | `/tasks`     | Create a new task       |
-| PATCH  | `/tasks/:id` | Update an existing task |
-| DELETE | `/tasks/:id` | Delete a task           |
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| `GET` | `/` | Retrieve API metadata and endpoints list |
+| `GET` | `/health` | Check API health and PostgreSQL connection status |
+| `GET` | `/tasks` | Retrieve all tasks (Optional filter: `?done=true` or `?done=false`) |
+| `GET` | `/tasks/:id` | Retrieve a specific task by ID |
+| `POST` | `/tasks` | Create a new task (`{"title": "..."}`) |
+| `PUT` | `/tasks/:id` | Update an existing task (`{"title": "...", "done": true}`) |
+| `PATCH` | `/tasks/:id` | Partially update an existing task |
+| `DELETE` | `/tasks/:id` | Delete a task by ID |
+| `GET` | `/stats` | Retrieve total, done, and open task count |
+| `GET` | `/docs` | Interactive Swagger UI API documentation |
 
 ---
 
-Database Screenshot
+## Example Response (`curl -i`)
 
-![alt text](image-1.png)
+Here is an example request and response when retrieving tasks from the API:
+
+```bash
+curl -i http://localhost:3000/tasks
+```
+
+```http
+HTTP/1.1 200 OK
+X-Powered-By: Express
+Content-Type: application/json; charset=utf-8
+Content-Length: 211
+Date: Fri, 07 Aug 2026 11:30:00 GMT
+Connection: keep-alive
+
+[
+  {
+    "id": 1,
+    "title": "Learn Express.js",
+    "done": false
+  },
+  {
+    "id": 2,
+    "title": "Build a REST API",
+    "done": true
+  },
+  {
+    "id": 3,
+    "title": "Practice SQL queries",
+    "done": false
+  }
+]
+```
 
 ---
 
-## Example SQL Query
+## Database Inspection & Screenshot
 
-The following SQL query was executed during Stage 4:
+You can connect directly to the running PostgreSQL container to inspect your schema and data using `psql`:
 
-![alt text](image.png)
+```bash
+docker exec -it assigmenta2-db-1 psql -U postgres -d tasks
+```
 
-````
+### PostgreSQL CLI (`\dt` & `SELECT`)
 
-This query returns all tasks that have not yet been completed.
+```sql
+tasks=# \dt
+                           List of relations
+ Schema |  Name   | Type  |  Owner   
+--------+---------+-------+----------
+ public | tasks   | table | postgres
+(1 row)
 
----
+tasks=# SELECT * FROM tasks;
+ id |        title         | done 
+----+----------------------+------
+  1 | Learn Express.js     | f
+  2 | Build a REST API     | t
+  3 | Practice SQL queries | f
+(3 rows)
+```
 
-## Project Structure
+### Database Data Screenshot
 
-```text
-.
-├── app.js
-├── database.js
-├── routes/
-├── package.json
-├── tasks.db (created automatically)
-└── README.md
-````
-
----
-
-## Technologies Used
-
-- Node.js
-- Express.js
-- SQLite
-- better-sqlite3
+![Database Screenshot](image-1.png)
