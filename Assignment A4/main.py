@@ -1,0 +1,39 @@
+from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi.responses import JSONResponse
+from supabase import Client
+from database import get_supabase
+
+app = FastAPI()
+
+
+
+@app.get('/')
+def home():
+    return {"message":"Hello World!"}
+
+@app.post("/auth/signup")
+async def register_user(email: str, password: str, db = Depends(get_supabase)):
+    try:
+        # Correct Python SDK syntax
+        response = db.auth.sign_up({
+            "email": email, 
+            "password": password
+        })
+        return {"message": "Sign up successful! Please check your email for a confirmation link.", "user": response.user}
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, 
+            detail=str(e)
+        )
+
+@app.post('/auth/login')
+def login(email:str, password:str, db: Client = Depends(get_supabase)):
+    try:
+        response = db.auth.sign_in_with_password({"email":email,"password":password})
+
+        return JSONResponse(status_code=200, content={"access token":response.session.access_token, "refresh token": response.session.refresh_token})
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, 
+            detail=str(e)
+        )

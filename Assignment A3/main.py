@@ -13,9 +13,30 @@ supabase: Client = create_client(
     os.environ.get("SUPABASE_KEY")
 )
 
-@app.get('/')
-def home():
-    return {"message": "Welcome Home"}
+@app.get('/public/info')
+def PublicInfo():
+    return JSONResponse(
+        status_code=200, 
+        content={"message": "Welcome Stranger! This info is public"}
+    )
+
+@app.get("/protected/profile")
+def ProtectedProfile():
+    try:
+        response = supabase.auth.get_user()
+
+        return JSONResponse(
+            status_code=200,
+            content={"message":"success"}
+        )
+    except Exception as e:
+        print("SUPABASE ERROR:",e)
+
+        raise HTTPException(
+            status_code=400,
+            detail=str(e)
+        )
+        
 
 @app.post("/auth/signup")
 def signUp(email: str, password: str):
@@ -68,7 +89,8 @@ def login(email:str,password:str):
 
         return JSONResponse(
             status_code=200,
-            content={"message":"Success","access_token": response.session.access_token, "refresh_token":response.session.refresh_token}
+            content={"message":"Success","access_token": response.session.access_token, 
+                     "refresh_token":response.session.refresh_token}
         )
     
     except Exception as e:
