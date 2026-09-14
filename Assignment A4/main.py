@@ -43,8 +43,16 @@ def public_info():
     return JSONResponse(status_code=200,content={"message": "Welcome stranger! This info is public"})
 
 @app.get('/protected/profile')
-def protected_profile(access_token):
+def protected_profile(access_token, db: Client = Depends(get_supabase)):
     if not access_token:
         return JSONResponse(status_code=401, content={"error":"missing Access Token required"})
 
-    return {"Access Token":access_token}
+    try:
+        response = db.auth.get_user(access_token)
+
+        return JSONResponse(status_code=200, content={"message":"success", "user-data":{"id":response.user.id, "email":response.user.email, "created at": str(response.user.created_at)}})
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, 
+            detail=str(e)
+        )
