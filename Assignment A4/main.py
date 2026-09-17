@@ -1,9 +1,35 @@
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException, Query, status
 from fastapi.responses import JSONResponse
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from supabase import Client
 from database import get_supabase
 
 app = FastAPI()
+
+bearer_scheme = HTTPBearer(auto_error=False)
+
+
+def get_current_user(
+    credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
+    access_token: str | None = Query(default=None),
+    db: Client = Depends(get_supabase),
+):
+    token = credentials.credentials if credentials else access_token
+
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing access token",
+        )
+
+    try:
+        response = db.auth.get_user(token)
+        return response.user
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=str(e),
+        )
 
 
 
@@ -43,16 +69,15 @@ def public_info():
     return JSONResponse(status_code=200,content={"message": "Welcome stranger! This info is public"})
 
 @app.get('/protected/profile')
-def protected_profile(access_token, db: Client = Depends(get_supabase)):
-    if not access_token:
-        return JSONResponse(status_code=401, content={"error":"missing Access Token required"})
-
-    try:
-        response = db.auth.get_user(access_token)
-
-        return JSONResponse(status_code=200, content={"message":"success", "user-data":{"id":response.user.id, "email":response.user.email, "created at": str(response.user.created_at)}})
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, 
-            detail=str(e)
-        )
+def protected_profile(current_user = Depends(get_current_user)):
+    return JSONResponse(
+        status_code=200,
+        content={
+            "message": "success",
+            "user-data": {
+                "id": current_user.id,
+                "email": current_user.email,
+                "created at": str(current_user.created_at),
+            },
+        },
+    )
